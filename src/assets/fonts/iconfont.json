@@ -1,0 +1,107 @@
+{
+  "id": "2562914",
+  "name": "测试项目",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "813712",
+      "name": "密码",
+      "font_class": "mima",
+      "unicode": "e62f",
+      "unicode_decimal": 58927
+    },
+    {
+      "icon_id": "17408083",
+      "name": "用户",
+      "font_class": "yonghu",
+      "unicode": "e618",
+      "unicode_decimal": 58904
+    },
+    {
+      "icon_id": "11372783",
+      "name": "影院",
+      "font_class": "yingyuan",
+      "unicode": "e8c7",
+      "unicode_decimal": 59591
+    },
+    {
+      "icon_id": "1473243",
+      "name": "电影",
+      "font_class": "dianying",
+      "unicode": "e679",
+      "unicode_decimal": 59001
+    },
+    {
+      "icon_id": "695192",
+      "name": "搜索",
+      "font_class": "sousuo",
+      "unicode": "e63f",
+      "unicode_decimal": 58943
+    },
+    {
+      "icon_id": "815145",
+      "name": "分享 (3)",
+      "font_class": "fenxiang3",
+      "unicode": "e6be",
+      "unicode_decimal": 59070
+    },
+    {
+      "icon_id": "1048853",
+      "name": "上传",
+      "font_class": "icon_update",
+      "unicode": "e606",
+      "unicode_decimal": 58886
+    },
+    {
+      "icon_id": "1435243",
+      "name": "首页",
+      "font_class": "shouye",
+      "unicode": "e634",
+      "unicode_decimal": 58932
+    },
+    {
+      "icon_id": "2471408",
+      "name": "用户信息",
+      "font_class": "yonghuxinxi",
+      "unicode": "e680",
+      "unicode_decimal": 59008
+    },
+    {
+      "icon_id": "6997493",
+      "name": "我 的",
+      "font_class": "wodedangxuan",
+      "unicode": "e608",
+      "unicode_decimal": 58888
+    },
+    {
+      "icon_id": "8348110",
+      "name": "编辑",
+      "font_class": "bianji",
+      "unicode": "e718",
+      "unicode_decimal": 59160
+    },
+    {
+      "icon_id": "10392626",
+      "name": "钥匙",
+      "font_class": "yuechi",
+      "unicode": "e607",
+      "unicode_decimal": 58887
+    },
+    {
+      "icon_id": "18311262",
+      "name": "删 除",
+      "font_class": "shanchu1",
+      "unicode": "e63c",
+      "unicode_decimal": 58940
+    },
+    {
+      "icon_id": "18379488",
+      "name": "设 置",
+      "font_class": "shezhi",
+      "unicode": "e696",
+      "unicode_decimal": 59030
+    }
+  ]
+}
