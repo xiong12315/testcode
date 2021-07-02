@@ -4,17 +4,17 @@
             <div class="login_img">
                 <img src="../assets/img2.png">
             </div>
-            <el-form label-width="0px" class="form_box">
-                <el-form-item>
-                    <el-input prefix-icon="iconfont icon-yonghu" placeholder="请输入账号"></el-input>
+            <el-form label-width="0px" class="form_box" :model="LoginForm" :rules="LoginFormRules" ref="LoginFormRef">
+                <el-form-item prop="username">
+                    <el-input prefix-icon="iconfont icon-yonghu" placeholder="请输入账号" v-model="LoginForm.username"></el-input>
                 </el-form-item>
-                <el-form-item>
-                    <el-input prefix-icon="iconfont icon-mima" placeholder="请输入密码"></el-input>
+                <el-form-item prop="password">
+                    <el-input prefix-icon="iconfont icon-mima" placeholder="请输入密码" v-model="LoginForm.password" type=password></el-input>
                 </el-form-item>
                 <el-form-item class="btns">
                     <el-button type="primary">注册</el-button>
-                    <el-button type="success">登录</el-button>
-                    <el-button type="info">重置</el-button>
+                    <el-button type="success" @click="Login()">登录</el-button>
+                    <el-button type="info" @click="resetForm()">重置</el-button>
                 </el-form-item>
             </el-form>
         </div>
@@ -22,7 +22,44 @@
 </template>
 <script>
 export default {
-    
+    data() {
+        return {
+            LoginForm:{
+                username:'',
+                password:''
+            },
+            //先制定rules，然后对象放入，最后在prop中将规则绑定
+            LoginFormRules: {
+                username:[
+                    { required: true, message: '请输入账号', trigger: 'blur' },
+                    { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+                ],
+                password:[
+                    { required: true, message: '请输入密码', trigger: 'blur' },
+                    { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+                ]
+            }
+            
+        }
+    },
+    methods: {
+        //resetFields方法要获取表单的实例对象才能使用，实例对象通过ref引用进行获取,LoginFormRef
+        resetForm() {
+        // console.log(this)
+        this.$refs.LoginFormRef.resetFields();
+      },
+      Login(){
+          this.$refs.LoginFormRef.validate(async(vaild)=>{
+            if(!vaild) return;//如果取到到false，就直接return
+            const {data:res} = await this.$http.post('login',this.LoginForm)//通过axios的post请求发送数据,该结果是permisses，所以要用async进行简化
+            //   console.log(res)
+            if(res.status !== 200) return this.$message.error('错误')
+            this.$message.success('成功');
+            sessionStorage.setItem('token',res.data.token);
+            this.$router.push('/home')
+          })
+      }
+    },
 }
 </script>
 <style lang="scss" scoped>
