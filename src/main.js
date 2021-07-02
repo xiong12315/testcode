@@ -3,10 +3,17 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import './plugins/element.js'
+//全局导入全局样式表
 import './assets/css/global.css'
+//全局导入字体图标
 import './assets/fonts/iconfont.css'
+//全局导入axios
+import axios from 'axios'
 
 Vue.config.productionTip = false
+//配置请求的根路径，用vuex方法也行
+axios.defaults.baseURL = 'http://127.0.0.1:8000'
+Vue.prototype.$http = axios //每一个this组件都能通过$http访问到axios
 
 new Vue({
   router,
