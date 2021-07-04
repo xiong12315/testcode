@@ -12,7 +12,7 @@ import axios from 'axios'
 
 Vue.config.productionTip = false
 //配置请求的根路径，用vuex方法也行
-axios.defaults.baseURL = 'http://127.0.0.1:8000'
+axios.defaults.baseURL = 'http://192.168.1.4:5000/api_backend/v1/'
 Vue.prototype.$http = axios //每一个this组件都能通过$http访问到axios
 
 new Vue({

@@ -34,7 +34,7 @@ router.beforeEach((to,from,next)=>{
   const tokenStr = sessionStorage.getItem('token')
   //判断没有token就强制跳转
   if(!tokenStr) return next('/login')
-  next
+  next()
 })
 
 export default router
