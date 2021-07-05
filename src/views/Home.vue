@@ -7,21 +7,29 @@
           text-color="#fff"
           active-text-color="#ffd04b"
         >
-        <!-- 一级菜单 -->
-          <el-submenu index="1">
+        <!-- 一级菜单,动态数据绑定中要用字符串，所以要item.id+''-->
+          <el-submenu :index="item.id + ''" v-for="item in menulist" :key="item.id">
             <!-- 一级菜单模板 区域-->
             <template slot="title">
               <!-- 图标 -->
-              <i class="el-icon-location"></i>
+              <img
+                    :src="item.img"
+                    style="width: 20px;height: 20px;margin-right: 9px"
+                    v-if="item.level === 1"
+                />
               <!-- 文本 -->
-              <span>导航一</span>
+              <span>{{item.name}}</span>
             </template>
               <!-- 二级菜单 -->
-              <el-menu-item index="1-4-1">
+              <el-menu-item :index="subitem.id + ''" v-for="subitem in item.childNode" :key="subitem.id">
               <!-- 图标 -->
-              <i class="el-icon-location"></i>
+              <img
+                    :src="item.img"
+                    style="width: 20px;height: 20px;margin-right: 9px"
+                    v-if="item.level === 2"
+                />
               <!-- 文本 -->
-              <span>导航一</span>
+              <span>{{subitem.name}}</span>
               </el-menu-item>
           </el-submenu>
         </el-menu>
@@ -52,6 +60,14 @@
 </template>
 <script>
 export default {
+    data() {
+        return {
+            menulist:[]
+        }
+    },
+    created() {
+        this.getMenuList()
+    },
   methods: {
     handleCommand(command) {
       if (command == "logout") {
@@ -59,6 +75,14 @@ export default {
         this.$router.push("/login");
       }
     },
+    //获取菜单
+    async getMenuList(){
+        const {data:res}= await this.$http.get('me')
+        // console.log(res)
+        if(res.code !==0) return this.$message.error(res.data.detail)
+        this.menulist = res.data.menus
+        console.log(this.menulist)
+    }
   },
 };
 </script>

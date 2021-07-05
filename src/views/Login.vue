@@ -76,7 +76,7 @@ export default {
       this.$refs.LoginFormRef.validate(async (vaild) => {
         if (!vaild) return; //如果取到到false，就直接return
         const { data: res } = await this.$http.post("login", this.LoginForm); //通过axios的post请求发送数据,该结果是permisses，所以要用async进行简化
-        console.log(res.code);
+        console.log(res);
         if (res.code !== 0) return this.$message.error("错误");
         this.$message.success("成功");
         sessionStorage.setItem("token", res.data.token);
