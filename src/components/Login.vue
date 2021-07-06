@@ -80,7 +80,7 @@ export default {
         if (res.code !== 0) return this.$message.error("错误");
         this.$message.success("成功");
         sessionStorage.setItem("token", res.data.token);
-        this.$router.push("/home");
+        this.$router.push("/Index");
       });
     },
   },
