@@ -58,13 +58,17 @@
       </div>
     </el-card>
     <!-- 添加用户的对话框 -->
-    <el-dialog title="提示" :visible.sync="addDialogVisible" width="50%">
+    <el-dialog title="添加用户" :visible.sync="addDialogVisible" width="50%" @close="addDialogClosed">
       <!-- 内容主体区域 -->
-      <span>这是一段信息</span>
+      <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="70px">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="addForm.username"></el-input>
+        </el-form-item>
+      </el-form>
       <!-- 底部区域 -->
       <span slot="footer" class="dialog-footer">
         <el-button @click="addDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="addDialogVisible = false">确 定</el-button>
+        <el-button type="primary" @click="addDialogcommit">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -85,13 +89,25 @@ export default {
       userlist: [],
       currentPage4: 1,
       // 显示对话框的隐藏和显示，一个布尔值
-      addDialogVisible: false
+      addDialogVisible: false,
+      // 添加用户表单数据
+      addForm: {
+        username: ''
+      },
+      //添加用户的规则对象
+      addFormRules: {
+        username: [
+          { required: true, message: '请输入姓名', trigger: 'blur' },
+          { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+        ]
+      }
     };
   },
   created() {
     this.getUserlist();
   },
   methods: {
+    //得到用户列表函数，多处可以调用
     async getUserlist() {
       await this.$http.get('/adminuser/list', { params: this.queryinfo }).then(res => {
         if (res.data.code !== 0) {
@@ -154,6 +170,24 @@ export default {
           });
         }
       }
+    },
+    //监听添加用户对话框关闭
+    addDialogClosed() {
+      this.$refs.addFormRef.resetFields();
+    },
+    //提交按钮后进行validate判断，过了才能发起请求
+    addDialogcommit() {
+      this.$refs.addFormRef.validate(valid => {
+        if (!valid) return;
+        //可以发起添加的请求
+        let res = this.$http.post('adminuser/add', this.addForm);
+        if (res.status !== 0) return this.$message.error('添加失败');
+        this.$message.success('用户添加成功');
+        //完成隐藏对话框
+        this.addDialogVisible = false;
+        //刷新用户列表
+        this.getUserlist();
+      });
     }
   }
 };
