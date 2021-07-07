@@ -12,12 +12,13 @@
         <!-- 搜索框区域 -->
         <el-row :gutter="20">
           <el-col :span="7">
-            <el-input placeholder="请输入内容">
-              <el-button slot="append" icon="el-icon-search"></el-button>
+            <!-- 绑定clearable属性能清空对话框 -->
+            <el-input placeholder="请输入内容" v-model="queryinfo.username" clearable @clear="getUserlist">
+              <el-button slot="append" icon="el-icon-search" @click="getUserlist"></el-button>
             </el-input>
           </el-col>
           <el-col :span="3">
-            <el-button type="primary">添加用户</el-button>
+            <el-button type="primary" @click="addDialogVisible = true">添加用户</el-button>
           </el-col>
         </el-row>
         <!-- 用户表格区域 -->
@@ -30,7 +31,7 @@
           <!-- 自定义插槽区域 -->
           <el-table-column label="状态">
             <template v-slot="scope">
-              <el-switch v-model="scope.row.is_active"> </el-switch>
+              <el-switch v-model="scope.row.is_active" @change="userstatechange(scope.row)"> </el-switch>
             </template>
           </el-table-column>
           <el-table-column label="操作">
@@ -48,26 +49,43 @@
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
           :current-page="currentPage4"
-          :page-sizes="[100, 200, 300, 400]"
-          :page-size="100"
+          :page-sizes="[1, 3, 5, 10]"
+          :page-size="queryinfo.limit"
           layout="total, sizes, prev, pager, next, jumper"
-          :total="400"
+          :total="total"
         >
         </el-pagination>
       </div>
     </el-card>
+    <!-- 添加用户的对话框 -->
+    <el-dialog title="提示" :visible.sync="addDialogVisible" width="50%">
+      <!-- 内容主体区域 -->
+      <span>这是一段信息</span>
+      <!-- 底部区域 -->
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="addDialogVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
 export default {
   data() {
     return {
+      // 获取用户列表的参数对象
       queryinfo: {
-        offset: 1,
-        limit: 10
+        // 当前的offset，页数要进行换算
+        offset: 0,
+        // 当前的每页显示多少数据，一个默认值并动态绑定
+        limit: 10,
+        username: ''
       },
-      totle: 0,
-      userlist: []
+      total: 0,
+      userlist: [],
+      currentPage4: 1,
+      // 显示对话框的隐藏和显示，一个布尔值
+      addDialogVisible: false
     };
   },
   created() {
@@ -87,13 +105,55 @@ export default {
             item.is_active = false;
           }
           this.userlist = res.data.data.results;
-          this.totle = res.data.data.count;
+          this.total = res.data.data.count;
         });
       });
     },
     //监听pagesize改变的事件
     handleSizeChange(newsize) {
-      console.log(newsize);
+      // console.log(newsize);
+      this.queryinfo.limit = newsize;
+      this.getUserlist();
+    },
+    //监听页码值的改变并返回offset
+    handleCurrentChange(newpage) {
+      // console.log(newpage);
+      let offset = this.queryinfo.limit * newpage - this.queryinfo.limit;
+      this.queryinfo.offset = offset;
+      if (newpage === 1) {
+        this.queryinfo.offset = 0;
+      }
+      this.getUserlist();
+    },
+    //监听switch的开关状态的改变
+    async userstatechange(userinfo) {
+      // console.log(userinfo);
+      let data1 = {}; //post请求需要发送json，空的也可以
+      if (userinfo.is_active == true) {
+        const res = await this.$http.post(`adminuser/enable/${userinfo.pk}`, data1);
+        if (res.status !== 200) {
+          userinfo.is_active = !userinfo.is_active;
+          return this.$message.error('更新用户状态失败');
+        }
+        if (res.data.code == 0) {
+          this.$message({
+            type: 'success',
+            message: '启用成功'
+          });
+        }
+      } else {
+        const res = await this.$http.post(`adminuser/disable/${userinfo.pk}`, data1);
+        if (res.status !== 200) {
+          userinfo.is_active = !userinfo.is_active;
+          return this.$message.error('更新用户状态失败');
+        }
+        if (res.data.code == 0) {
+          this.$message({
+            type: 'success',
+            message: '停用成功'
+          });
+        }
+      }
     }
   }
 };
