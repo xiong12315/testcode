@@ -12,8 +12,8 @@ import axios from 'axios';
 
 Vue.config.productionTip = false;
 //配置请求的根路径，用vuex方法也行
-// axios.defaults.baseURL = "http://192.168.201.10:5000/api_backend/v1/";
-axios.defaults.baseURL = 'http://192.168.1.4:5000/api_backend/v1/';
+axios.defaults.baseURL = 'http://192.168.201.10:5000/api_backend/v1/';
+// axios.defaults.baseURL = 'http://192.168.1.4:5000/api_backend/v1/';
 // 请求拦截器
 axios.interceptors.request.use(
   // console.log(config)

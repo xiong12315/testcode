@@ -23,7 +23,7 @@
         </el-row>
         <!-- 用户表格区域 -->
         <el-table :data="userlist" border stripe>
-          <el-table-column type="index" label="#"></el-table-column>
+          <el-table-column type="index" label="序号"></el-table-column>
           <el-table-column label="姓名" prop="nickname"></el-table-column>
           <el-table-column label="角色" prop="show_name"></el-table-column>
           <el-table-column label="手机号码" prop="mobile"></el-table-column>
@@ -61,8 +61,25 @@
     <el-dialog title="添加用户" :visible.sync="addDialogVisible" width="50%" @close="addDialogClosed">
       <!-- 内容主体区域 -->
       <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="70px">
-        <el-form-item label="用户名" prop="username">
+        <el-form-item label="昵称" prop="nickname">
+          <el-input v-model="addForm.nickname"></el-input>
+        </el-form-item>
+        <el-form-item label="登录账号" prop="username">
           <el-input v-model="addForm.username"></el-input>
+        </el-form-item>
+        <el-form-item label="手机号" prop="mobile">
+          <el-input v-model="addForm.mobile"></el-input>
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="addForm.password"></el-input>
+        </el-form-item>
+        <el-form-item label="确认密码" prop="checkpass">
+          <el-input v-model="addForm.checkpass"></el-input>
+        </el-form-item>
+        <el-form-item label="角色" prop="role">
+          <el-select v-model="addForm.role" placeholder="请选择">
+            <el-option v-for="item in roleList" :key="item.id" :label="item.show_name" :value="item.id"> </el-option>
+          </el-select>
         </el-form-item>
       </el-form>
       <!-- 底部区域 -->
@@ -76,6 +93,22 @@
 <script>
 export default {
   data() {
+    //验证手机号的规则
+    var checkMobile = (rule, value, cb) => {
+      const regPhone = /^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}$/;
+      if (regPhone.test(value)) {
+        return cb();
+      }
+      cb(new Error('请输入正确的手机号'));
+    };
+    //验证再次输入的密码
+    var checkpassword = (rule, value, cb) => {
+      if (value !== this.addForm.password) {
+        cb(new Error('两次输入密码不一致!'));
+      } else {
+        cb();
+      }
+    };
     return {
       // 获取用户列表的参数对象
       queryinfo: {
@@ -90,21 +123,51 @@ export default {
       currentPage4: 1,
       // 显示对话框的隐藏和显示，一个布尔值
       addDialogVisible: false,
+      //角色列表，从local中获取公司的角色列表
+      roleList: [],
       // 添加用户表单数据
+
       addForm: {
-        username: ''
+        nickname: '',
+        username: '',
+        is_active: true,
+        password: '',
+        role: '',
+        permissions: {},
+        mobile: '',
+        checkpass: ''
       },
       //添加用户的规则对象
       addFormRules: {
         username: [
-          { required: true, message: '请输入姓名', trigger: 'blur' },
+          { required: true, message: '请输入登录账号', trigger: 'blur' },
           { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+        ],
+        nickname: [
+          { required: true, message: '请输入昵称', trigger: 'blur' },
+          { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+        ],
+        password: [
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          { min: 6, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+        ],
+        mobile: [
+          { required: true, message: '请输入手机号', trigger: 'blur' },
+          { validator: checkMobile, trigger: 'blur' }
+        ],
+        checkpass: [
+          { required: true, message: '请再次输入密码', trigger: 'blur' },
+          { validator: checkpassword, trigger: 'blur' }
         ]
       }
     };
   },
   created() {
     this.getUserlist();
+  },
+  mounted() {
+    this.roleList = JSON.parse(sessionStorage.getItem('company_roles'));
+    // console.log(this.roleList);
   },
   methods: {
     //得到用户列表函数，多处可以调用
@@ -180,7 +243,8 @@ export default {
       this.$refs.addFormRef.validate(valid => {
         if (!valid) return;
         //可以发起添加的请求
-        let res = this.$http.post('adminuser/add', this.addForm);
+        let res = this.$http.post('adminuser/add/', this.addForm);
+        console.log(res);
         if (res.status !== 0) return this.$message.error('添加失败');
         this.$message.success('用户添加成功');
         //完成隐藏对话框

@@ -4,27 +4,12 @@
       <div class="login_img">
         <img src="../assets/img2.png" />
       </div>
-      <el-form
-        label-width="0px"
-        class="form_box"
-        :model="LoginForm"
-        :rules="LoginFormRules"
-        ref="LoginFormRef"
-      >
+      <el-form label-width="0px" class="form_box" :model="LoginForm" :rules="LoginFormRules" ref="LoginFormRef">
         <el-form-item prop="username">
-          <el-input
-            prefix-icon="iconfont icon-yonghu"
-            placeholder="请输入账号"
-            v-model="LoginForm.username"
-          ></el-input>
+          <el-input prefix-icon="iconfont icon-yonghu" placeholder="请输入账号" v-model="LoginForm.username"></el-input>
         </el-form-item>
         <el-form-item prop="password">
-          <el-input
-            prefix-icon="iconfont icon-mima"
-            placeholder="请输入密码"
-            v-model="LoginForm.password"
-            type="password"
-          ></el-input>
+          <el-input prefix-icon="iconfont icon-mima" placeholder="请输入密码" v-model="LoginForm.password" type="password"></el-input>
         </el-form-item>
         <el-form-item class="btns">
           <el-button type="primary">注册</el-button>
@@ -40,30 +25,30 @@ export default {
   data() {
     return {
       LoginForm: {
-        username: "",
-        password: "",
+        username: '',
+        password: ''
       },
       //先制定rules，然后对象放入，最后在prop中将规则绑定
       LoginFormRules: {
         username: [
-          { required: true, message: "请输入账号", trigger: "blur" },
+          { required: true, message: '请输入账号', trigger: 'blur' },
           {
             min: 3,
             max: 10,
-            message: "长度在 3 到 10 个字符",
-            trigger: "blur",
-          },
+            message: '长度在 3 到 10 个字符',
+            trigger: 'blur'
+          }
         ],
         password: [
-          { required: true, message: "请输入密码", trigger: "blur" },
+          { required: true, message: '请输入密码', trigger: 'blur' },
           {
             min: 3,
             max: 10,
-            message: "长度在 3 到 10 个字符",
-            trigger: "blur",
-          },
-        ],
-      },
+            message: '长度在 3 到 10 个字符',
+            trigger: 'blur'
+          }
+        ]
+      }
     };
   },
   methods: {
@@ -73,17 +58,26 @@ export default {
       this.$refs.LoginFormRef.resetFields();
     },
     Login() {
-      this.$refs.LoginFormRef.validate(async (vaild) => {
+      this.$refs.LoginFormRef.validate(async vaild => {
         if (!vaild) return; //如果取到到false，就直接return
-        const { data: res } = await this.$http.post("login", this.LoginForm); //通过axios的post请求发送数据,该结果是permisses，所以要用async进行简化
-        console.log(res);
-        if (res.code !== 0) return this.$message.error("错误");
-        this.$message.success("成功");
-        sessionStorage.setItem("token", res.data.token);
-        this.$router.push("/Index");
+        let res = await this.$http.post('login', this.LoginForm); //通过axios的post请求发送数据,该结果是permisses，所以要用async进行简化
+        // console.log(res.data.data);
+        if (res.data.code !== 0) return this.$message.error('错误');
+        sessionStorage.setItem('token', res.data.data.token);
+        if (res.data.code == 0) {
+          let res1 = await this.$http.get('me');
+          console.log(res1.data.data);
+          sessionStorage.setItem('menuList', JSON.stringify(res1.data.data.menus));
+          sessionStorage.setItem('company_permissions', JSON.stringify(res1.data.data.company_permissions));
+          sessionStorage.setItem('username', res1.data.data.username);
+          sessionStorage.setItem('company_id', res1.data.data.company_id);
+          sessionStorage.setItem('company_roles', JSON.stringify(res1.data.data.company_roles));
+        }
+        this.$message.success('成功');
+        this.$router.push('/Index');
       });
-    },
-  },
+    }
+  }
 };
 </script>
 <style lang="scss" scoped>
