@@ -133,7 +133,7 @@ export default {
         is_active: true,
         password: '',
         role: '',
-        permissions: {},
+        permissions: JSON.stringify([{ permission_id: 120, permission_name: '主页', group: '主页' }]),
         mobile: '',
         checkpass: ''
       },
@@ -173,7 +173,7 @@ export default {
     //得到用户列表函数，多处可以调用
     async getUserlist() {
       await this.$http.get('/adminuser/list', { params: this.queryinfo }).then(res => {
-        if (res.data.code !== 0) {
+        if (res.data.code != 0) {
           return this.$message.error('获取错误');
         }
         //通过foreach将is_active转换为布尔值
@@ -243,9 +243,9 @@ export default {
       this.$refs.addFormRef.validate(valid => {
         if (!valid) return;
         //可以发起添加的请求
-        let res = this.$http.post('adminuser/add/', this.addForm);
+        let res = this.$http.post('adminuser/add', this.addForm);
         console.log(res);
-        if (res.status !== 0) return this.$message.error('添加失败');
+        if (res.code !== 0) return this.$message.error('添加失败');
         this.$message.success('用户添加成功');
         //完成隐藏对话框
         this.addDialogVisible = false;
