@@ -35,9 +35,12 @@
             </template>
           </el-table-column>
           <el-table-column label="操作">
-            <template>
-              <el-button type="primary" icon="el-icon-edit" size="mini"></el-button>
+            <template v-slot="scope">
+              <!-- 修改按钮 -->
+              <el-button type="primary" icon="el-icon-edit" size="mini" @click="editDialog(scope.row.pk)"></el-button>
+              <!-- 删除按钮 -->
               <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
+              <!-- 分配角色按钮，加了一个文字提示 -->
               <el-tooltip class="item" effect="dark" content="分配角色" placement="top" :enterable="false">
                 <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
               </el-tooltip>
@@ -60,7 +63,7 @@
     <!-- 添加用户的对话框 -->
     <el-dialog title="添加用户" :visible.sync="addDialogVisible" width="50%" @close="addDialogClosed">
       <!-- 内容主体区域 -->
-      <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="70px">
+      <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="100px">
         <el-form-item label="昵称" prop="nickname">
           <el-input v-model="addForm.nickname"></el-input>
         </el-form-item>
@@ -86,6 +89,24 @@
       <span slot="footer" class="dialog-footer">
         <el-button @click="addDialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="addDialogcommit">确 定</el-button>
+      </span>
+    </el-dialog>
+    <!-- 修改用户的对话框 -->
+    <el-dialog title="修改用户" :visible.sync="editDialogVisible" width="30%">
+      <el-form :model="editForm" :rules="addFormRules" ref="editFormRef" label-width="100px">
+        <el-form-item label="账号">
+          <el-input v-model="editForm.username" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="用户名">
+          <el-input v-model="editForm.nickname"></el-input>
+        </el-form-item>
+        <el-form-item label="手机号" prop="mobile">
+          <el-input v-model="editForm.mobile"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="editUserInfo">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -123,10 +144,12 @@ export default {
       currentPage4: 1,
       // 显示对话框的隐藏和显示，一个布尔值
       addDialogVisible: false,
+      editDialogVisible: false,
+      //修改用户按钮查询到的用户对象
+      editForm: {},
       //角色列表，从local中获取公司的角色列表
       roleList: [],
       // 添加用户表单数据
-
       addForm: {
         nickname: '',
         username: '',
@@ -251,6 +274,27 @@ export default {
         this.addDialogVisible = false;
         //刷新用户列表
         this.getUserlist();
+      });
+    },
+    async editDialog(id) {
+      // console.log(id);
+      let res = await this.$http.get('adminuser/retrieve/' + id);
+      if (res.status !== 200) {
+        return this.$message.error('查询用户失败');
+      }
+      console.log(res.data.data);
+      this.editForm = res.data.data;
+      this.editDialogVisible = true;
+    },
+    //监听修改用户对话框关闭
+    editDialogClosed() {
+      this.$refs.editFormRef.resetFields();
+    },
+    editUserInfo() {
+      this.$refs.addFormRef.validate(valid => {
+        if (!valid) return;
+        //可以发起修改的请求
+        console.log(valid);
       });
     }
   }
