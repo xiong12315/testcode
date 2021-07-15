@@ -39,7 +39,7 @@
               <!-- 修改按钮 -->
               <el-button type="primary" icon="el-icon-edit" size="mini" @click="editDialog(scope.row.pk)"></el-button>
               <!-- 删除按钮 -->
-              <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
+              <el-button type="danger" icon="el-icon-delete" size="mini" @click="removeUserBtn(scope.row.pk)"></el-button>
               <!-- 分配角色按钮，加了一个文字提示 -->
               <el-tooltip class="item" effect="dark" content="分配角色" placement="top" :enterable="false">
                 <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
@@ -149,6 +149,7 @@ export default {
       editForm: {},
       //角色列表，从local中获取公司的角色列表
       roleList: [],
+      editDialogPk: '',
       // 添加用户表单数据
       addForm: {
         nickname: '',
@@ -156,7 +157,13 @@ export default {
         is_active: true,
         password: '',
         role: '',
-        permissions: JSON.stringify([{ permission_id: 120, permission_name: '主页', group: '主页' }]),
+        permissions: JSON.stringify([
+          { permission_id: 8, permission_name: '查询行政区域', group: '共用数据' },
+          { permission_id: 33, permission_name: '后台用户个人信息', group: '后台个人信息' },
+          { permission_id: 48, permission_name: '修改密码', group: '后台个人信息' },
+          { permission_id: 119, permission_name: 'OSSAK', group: '共用数据' },
+          { permission_id: 120, permission_name: '主页', group: '主页' }
+        ]),
         mobile: '',
         checkpass: ''
       },
@@ -284,18 +291,51 @@ export default {
       }
       console.log(res.data.data);
       this.editForm = res.data.data;
+      this.editDialogPk = id;
       this.editDialogVisible = true;
     },
     //监听修改用户对话框关闭
     editDialogClosed() {
       this.$refs.editFormRef.resetFields();
     },
+    //修改Y用户信息并提交
     editUserInfo() {
-      this.$refs.addFormRef.validate(valid => {
+      this.$refs.editFormRef.validate(async valid => {
         if (!valid) return;
         //可以发起修改的请求
-        console.log(valid);
+        // console.log(valid);
+        let res = await this.$http.post('adminuser/change/' + this.editDialogPk, {
+          is_active: this.editForm.is_active,
+          nickname: this.editForm.nickname,
+          permissions: this.addForm.permissions,
+          role: this.editForm.role,
+          username: this.editForm.username
+        });
+        console.log(res.data);
+        if (res.data.code !== 0) {
+          return this.$message.error('修改错误');
+        }
+        this.editDialogVisible = false;
+        this.getUserlist();
       });
+    },
+    //根据id删除对应的用户信息
+    async removeUserBtn(id) {
+      console.log(id);
+      //先弹框然后确认再删除
+      let confirmReusult = await this.$confirm('此操作将永久删除该账号, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      //用catch捕获取消的错误
+      //如果用户确认删除，返回字符串confirm
+      //如果用户取消删除，返回字符串cancel
+      // console.log(confirmReusult)
+      if (confirmReusult !== 'confirm') {
+        return this.$message.info('已经取消');
+      }
+      console.log('确认删除了');
     }
   }
 };
