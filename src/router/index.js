@@ -1,40 +1,32 @@
-import Vue from "vue";
-import VueRouter from "vue-router";
-import login from "@/components/Login.vue";
-import index from "@/components/Index.vue";
-import welcome from "@/components/Welcome.vue";
-import accountmanage from "@/components/user/AccountManage.vue";
+import Vue from 'vue';
+import VueRouter from 'vue-router';
+import Login from '@/components/Login.vue';
+import Home from '@/components/Index.vue';
+import Welcome from '@/components/Welcome.vue';
+import Users from '@/components/user/User.vue';
+import Roles from '@/components/rights/Roles.vue';
+import Rights from '@/components/rights/Rights.vue';
 
 Vue.use(VueRouter);
 
 const routes = [
+  { path: '/', redirect: '/login' },
+  { path: '/login', component: Login },
   {
-    path: "/Login",
-    component: login,
-  },
-  {
-    path: "/Index",
-    component: index,
-    redirect: "/Index/Welcome",
+    path: '/home',
+    component: Home,
+    redirect: '/Welcome',
     children: [
-      {
-        path: "/Index/Welcome",
-        component: welcome,
-      },
-      {
-        path: "/Index/AccountManage",
-        component: accountmanage,
-      },
-    ],
-  },
-  {
-    path: "/",
-    redirect: "/Login",
-  },
+      { path: '/home', component: Welcome },
+      { path: '/users', component: Users },
+      { path: '/roles', component: Roles },
+      { path: '/rights', component: Rights }
+    ]
+  }
 ];
 
 const router = new VueRouter({
-  routes,
+  routes
 });
 //挂载路由导航守卫
 router.beforeEach((to, from, next) => {
@@ -42,11 +34,11 @@ router.beforeEach((to, from, next) => {
   //form 代表是从哪个路径跳转而来
   //next 是一个函数，表示放行
   //   next()   next('/login')在next后可以填入强制跳转的路径
-  if (to.path === "/login") return next();
+  if (to.path === '/login') return next();
   //获取token
-  const tokenStr = sessionStorage.getItem("token");
+  const tokenStr = sessionStorage.getItem('token');
   //判断没有token就强制跳转
-  if (!tokenStr) return next("/login");
+  if (!tokenStr) return next('/login');
   next();
 });
 

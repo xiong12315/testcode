@@ -12,7 +12,7 @@ import axios from 'axios';
 
 Vue.config.productionTip = false;
 //配置请求的根路径，用vuex方法也行
-axios.defaults.baseURL = 'http://192.168.201.26:5000/api_backend/v1/';
+axios.defaults.baseURL = 'http://127.0.0.1:8888/api/private/v1/';
 // axios.defaults.baseURL = 'http://192.168.1.4:5000/api_backend/v1/';
 // 请求拦截器
 axios.interceptors.request.use(
@@ -21,7 +21,8 @@ axios.interceptors.request.use(
     const token = sessionStorage.getItem('token');
     if (token) {
       // 判断是否存在token，如果存在的话，则每个http header都加上token
-      config.headers = { token: token }; //请求头加上token
+      // config.headers = { token: token }; //请求头加上token
+      config.headers.Authorization = window.sessionStorage.getItem('token');
     }
     return config;
   },

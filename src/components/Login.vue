@@ -4,17 +4,17 @@
       <div class="login_img">
         <img src="../assets/img2.png" />
       </div>
-      <el-form label-width="0px" class="form_box" :model="LoginForm" :rules="LoginFormRules" ref="LoginFormRef">
+      <el-form label-width="0px" class="form_box" :model="loginForm" :rules="loginFormRules" ref="loginFormRef">
         <el-form-item prop="username">
-          <el-input prefix-icon="iconfont icon-yonghu" placeholder="请输入账号" v-model="LoginForm.username"></el-input>
+          <el-input prefix-icon="iconfont icon-yonghu" placeholder="请输入账号" v-model="loginForm.username"></el-input>
         </el-form-item>
         <el-form-item prop="password">
-          <el-input prefix-icon="iconfont icon-mima" placeholder="请输入密码" v-model="LoginForm.password" type="password"></el-input>
+          <el-input prefix-icon="iconfont icon-mima" placeholder="请输入密码" v-model="loginForm.password" type="password"></el-input>
         </el-form-item>
         <el-form-item class="btns">
           <el-button type="primary">注册</el-button>
-          <el-button type="success" @click="Login()">登录</el-button>
-          <el-button type="info" @click="resetForm()">重置</el-button>
+          <el-button type="success" @click="login">登录</el-button>
+          <el-button type="info" @click="resetLoginForm">重置</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -24,57 +24,48 @@
 export default {
   data() {
     return {
-      LoginForm: {
-        username: '',
-        password: ''
+      loginForm: {
+        username: 'admin',
+        password: '123456'
       },
-      //先制定rules，然后对象放入，最后在prop中将规则绑定
-      LoginFormRules: {
+      // 表单验证
+      loginFormRules: {
         username: [
-          { required: true, message: '请输入账号', trigger: 'blur' },
-          {
-            min: 3,
-            max: 10,
-            message: '长度在 3 到 10 个字符',
-            trigger: 'blur'
-          }
+          { required: true, message: '请输入用户名', trigger: 'blur' },
+          { min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur' }
         ],
         password: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
-          {
-            min: 3,
-            max: 10,
-            message: '长度在 3 到 10 个字符',
-            trigger: 'blur'
-          }
+          { required: true, message: '请输入用户密码', trigger: 'blur' },
+          { min: 6, max: 18, message: '长度在 6 到 18 个字符', trigger: 'blur' }
         ]
       }
     };
   },
   methods: {
-    //resetFields方法要获取表单的实例对象才能使用，实例对象通过ref引用进行获取,LoginFormRef
-    resetForm() {
+    // 表单重置按钮
+    resetLoginForm() {
       // console.log(this)
-      this.$refs.LoginFormRef.resetFields();
+      // resetFields：element-ui提供的表单方法
+      this.$refs.loginFormRef.resetFields();
     },
-    Login() {
-      this.$refs.LoginFormRef.validate(async vaild => {
-        if (!vaild) return; //如果取到到false，就直接return
-        let res = await this.$http.post('login', this.LoginForm); //通过axios的post请求发送数据,该结果是permisses，所以要用async进行简化
-        // console.log(res.data.data);
-        if (res.data.code !== 0) return this.$message.error('错误');
-        sessionStorage.setItem('token', res.data.data.token);
-        if (res.data.code == 0) {
-          let res1 = await this.$http.get('me');
-          console.log(res1.data.data);
-          sessionStorage.setItem('menuList', JSON.stringify(res1.data.data.menus));
-          sessionStorage.setItem('company_permissions', JSON.stringify(res1.data.data.company_permissions));
-          sessionStorage.setItem('username', res1.data.data.username);
-          sessionStorage.setItem('company_id', res1.data.data.company_id);
-          sessionStorage.setItem('company_roles', JSON.stringify(res1.data.data.company_roles));
-        }
-        this.$message.success('成功');
-        this.$router.push('/Index');
+    login() {
+      // 表单预验证
+      // valid：bool类型
+      this.$refs.loginFormRef.validate(async valid => {
+        // console.log(valid)
+        if (!valid) return false;
+        // this.$http.post('login', this.loginForm): 返回值为promise
+        // 返回值为promise，可加await简化操作 相应的也要加async
+        const { data: res } = await this.$http.post('login', this.loginForm);
+        // console.log(res)
+        if (res.meta.status !== 200) return this.$message.error('登录失败');
+        this.$message.success('登录成功');
+        // 1、将登陆成功之后的token, 保存到客户端的sessionStorage中; localStorage中是持久化的保存
+        //   1.1 项目中出现了登录之外的其他API接口，必须在登陆之后才能访问
+        //   1.2 token 只应在当前网站打开期间生效，所以将token保存在sessionStorage中
+        window.sessionStorage.setItem('token', res.data.token);
+        // 2、通过编程式导航跳转到后台主页, 路由地址为：/home
+        this.$router.push('/home');
       });
     }
   }
