@@ -38,7 +38,7 @@
             <el-button type="primary" icon="el-icon-edit" size="mini" circle @click="showEditDialog(scope.row.id)"></el-button>
             <el-button type="danger" icon="el-icon-delete" size="mini" circle @click="removeUserById(scope.row.id)"></el-button>
             <el-tooltip class="item" effect="dark" content="角色分配" :enterable="false" placement="top">
-              <el-button type="warning" icon="el-icon-setting" size="mini" circle></el-button>
+              <el-button type="warning" icon="el-icon-setting" size="mini" circle @click="setRoleDialog(scope.row)"></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -95,6 +95,18 @@
       <span slot="footer" class="dialog-footer">
         <el-button @click="editDialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="editUser">确 定</el-button>
+      </span>
+    </el-dialog>
+    <!-- //分配角色对话框 -->
+    <el-dialog title="分配角色" :visible.sync="setRoleDialogVisible" width="50%">
+      <!-- 内容主体 -->
+      <div>
+        <p>用户名：{{ userInfo.username }}</p>
+        <p>角色名：{{ userInfo.role_name }}</p>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="setRoleDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="setRoleDialogVisible = false">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -183,7 +195,13 @@ export default {
           { required: true, message: '请输入手机号码', trigger: 'blur' },
           { validator: checkMobile, trigger: 'blur' }
         ]
-      }
+      },
+      //控制分配角色对话框的显示与隐藏
+      setRoleDialogVisible: false,
+      //分配角色需要的信息
+      userInfo: {},
+      //所有的角色列表
+      rolesList: {}
     };
   },
   created() {
@@ -292,6 +310,17 @@ export default {
       if (res.meta.status !== 200) return this.$message.error('删除用户失败！');
       this.$message.success('删除用户成功！');
       this.getUserList();
+    },
+    setRoleDialog(userInfo) {
+      this.userInfo = userInfo;
+      // console.log(this.userInfo);
+      //展示对话框之前获取所有的角色列表
+      let { data: res } = this.$http.get('roles');
+      if (res.meta.status !== 200) {
+        return this.$message.error('错误');
+      }
+      this.rolesList = res.data;
+      this.setRoleDialogVisible = true;
     }
   }
 };

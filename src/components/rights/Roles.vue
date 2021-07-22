@@ -47,20 +47,20 @@
         <el-table-column prop="roleName" label="角色名称"> </el-table-column>
         <el-table-column prop="roleDesc" label="角色描述"> </el-table-column>
         <el-table-column label="操作">
-          <template>
+          <template slot-scope="scope">
             <el-button type="primary" icon="el-icon-edit">编辑</el-button>
             <el-button type="danger" icon="el-icon-delete">删除</el-button>
-            <el-button type="warning" icon="el-icon-setting" @click="showSetRightDialog">分配权限</el-button>
+            <el-button type="warning" icon="el-icon-setting" @click="showSetRightDialog(scope.row)">分配权限</el-button>
           </template>
         </el-table-column>
       </el-table>
     </el-card>
-    <el-dialog title="修改权限" :visible.sync="setDialogVisible" width="50%">
+    <el-dialog title="修改权限" :visible.sync="setDialogVisible" width="50%" @close="setDialogClose">
       <!-- 树形控件，添加一个show-checkbox就可以选择 -->
-      <el-tree :data="RightList" :props="treeProps" show-checkbox node-key="id" default-expand-all :default-checked-keys="defKeys"></el-tree>
+      <el-tree :data="RightList" :props="treeProps" show-checkbox node-key="id" default-expand-all :default-checked-keys="defKeys" ref="treeRef"></el-tree>
       <span slot="footer" class="dialog-footer">
         <el-button @click="setDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="setDialogVisible = false">确 定</el-button>
+        <el-button type="primary" @click="setDialogCommit">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -79,7 +79,9 @@ export default {
       treeProps: {
         children: 'children',
         label: 'authName'
-      }
+      },
+      defKeys: [],
+      RoleId: ''
     };
   },
   created() {
@@ -114,17 +116,42 @@ export default {
       role.children = res.data;
     },
     //展示角色所有的权限
-    async showSetRightDialog() {
+    async showSetRightDialog(role) {
+      this.RoleId = role.id;
       let { data: res } = await this.$http.get('rights/tree');
       if (res.meta.status !== 200) {
         return this.$message.error('获取权限失败');
       }
       //获取到的权限数据保存到data数据中
       this.RightList = res.data;
+      //获取默认权限
+      this.getLeafList(role, this.defKeys);
       //打开权限对话框
       this.setDialogVisible = true;
-    }
+    },
     //通过递归的形式，获取角色下所有三级权限的id，并保存到defKeys数组中
+    getLeafList(node, arr) {
+      if (!node.children) {
+        return arr.push(node.id);
+      }
+      node.children.forEach(item => {
+        this.getLeafList(item, arr);
+      });
+    },
+    setDialogClose() {
+      this.defKeys = [];
+    },
+    async setDialogCommit() {
+      let keys = [...this.$refs.treeRef.getCheckedKeys(), ...this.$refs.treeRef.getHalfCheckedKeys()];
+      let idStr = keys.join(',');
+      let { data: res } = await this.$http.post(`roles/${this.RoleId}/rights`, { rids: idStr });
+      if (res.meta.status !== 200) {
+        return this.$message.error('修改错误');
+      }
+      this.$message.info('成功');
+      this.setDialogVisible = false;
+      this.getRoleList();
+    }
   }
 };
 </script>
