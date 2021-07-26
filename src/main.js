@@ -7,6 +7,7 @@ import './plugins/element.js';
 import './assets/css/global.css';
 //全局导入字体图标
 import './assets/fonts/iconfont.css';
+import TreeTable from 'vue-table-with-tree-grid';
 //全局导入axios
 import axios from 'axios';
 
@@ -24,6 +25,7 @@ axios.interceptors.request.use(
       // config.headers = { token: token }; //请求头加上token
       config.headers.Authorization = window.sessionStorage.getItem('token');
     }
+    //最后必须return config
     return config;
   },
   err => {
@@ -31,6 +33,8 @@ axios.interceptors.request.use(
   }
 );
 Vue.prototype.$http = axios; //每一个this组件都能通过$http访问到axios
+
+Vue.component('tree-table', TreeTable);
 
 new Vue({
   router,
