@@ -57,7 +57,7 @@
 
     <!-- 添加用户的对话框 -->
     <el-dialog title="添加用户" :visible.sync="addDialogVisible" width="50%" @close="addDialogClosed">
-      <!-- 内容主体 -->
+      <!-- 内容主体,其中prop是绑定要使用的验证规则 -->
       <el-form :model="addUserForm" ref="addUserFormRef" :rules="addUserFormRules" label-width="100px">
         <el-form-item label="用户名" prop="username">
           <el-input v-model="addUserForm.username"></el-input>

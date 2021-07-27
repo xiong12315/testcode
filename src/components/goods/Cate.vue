@@ -43,15 +43,18 @@
       >
       </el-pagination>
     </el-card>
-    <el-dialog title="添加分类" :visible.sync="cateDialogVisible" width="50%">
-      <el-form ref="form" :model="addCateForm" label-width="80px" :rules="caterules">
-        <el-form-item label="分类">
-          <el-input v-model="addCateForm.name"></el-input>
+    <el-dialog title="添加分类" :visible.sync="cateDialogVisible" width="50%" @close="addCateDialogClosed">
+      <el-form ref="addCateFormRef" :model="addCateForm" label-width="80px" :rules="caterules">
+        <el-form-item label="分类名称" prop="cat_name">
+          <el-input v-model="addCateForm.cat_name"></el-input>
+        </el-form-item>
+        <el-form-item label="父级分类">
+          <el-cascader v-model="cateParentValue" :options="cateParentList" :props="cateParentProp" @change="cateHandleChange" clearable></el-cascader>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="cateDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="cateDialogVisible = false">确 定</el-button>
+        <el-button type="primary" @click="addCateCommit">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -64,6 +67,9 @@ export default {
       cateList: [],
       //总的数据条数
       catetotal: 0,
+      //父级分类列表
+      cateParentList: [],
+      cateParentValue: [],
       //为table指定列的定义
       columns: [
         {
@@ -101,15 +107,27 @@ export default {
       },
       //控制添加按钮的显示与隐藏
       cateDialogVisible: false,
-      //表单数据
+      //表单分类的数据对象
       addCateForm: {
-        name: ''
+        //将要添加的分类名称
+        cat_name: '',
+        //父级分类的id
+        cat_pid: 0,
+        //分类的等级，默认添加的一级分类
+        cat_level: 0
       },
       caterules: {
-        name: [
+        cat_name: [
           { required: true, message: '请输入分类', trigger: 'blur' },
-          { min: 3, max: 5, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+          { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
         ]
+      },
+      cateParentProp: {
+        expandTrigger: 'hover',
+        value: 'cat_id',
+        label: 'cat_name',
+        children: 'children',
+        checkStrictly: true
       }
     };
   },
@@ -137,7 +155,51 @@ export default {
     },
     //添加分类按钮
     addcate() {
+      //现获取父级数据
+      this.getParentList();
+      // 再打开对话框
       this.cateDialogVisible = true;
+    },
+    //父级分类列表获取
+    async getParentList() {
+      let { data: res } = await this.$http.get('categories', { params: { type: 2 } });
+      if (res.meta.status !== 200) {
+        return this.$message.error('获取失败');
+      }
+      this.cateParentList = res.data;
+    },
+    //监听数据的改变并获得数据
+    cateHandleChange() {
+      // console.log(this.cateParentValue);
+      if (this.cateParentValue.length > 0) {
+        this.addCateForm.cat_pid = this.cateParentValue[this.cateParentValue.length - 1];
+        this.addCateForm.cat_level = this.cateParentValue.length;
+      } else {
+        this.addCateForm.cat_pid = 0;
+        this.addCateForm.cat_level = 0;
+      }
+    },
+    //点击按钮添加分类
+    addCateCommit() {
+      // console.log(this.addCateForm);
+      this.$refs.addCateFormRef.validate(async valid => {
+        if (!valid) return;
+        let { data: res } = await this.$http.post('categories', this.addCateForm);
+        if (res.meta.status !== 201) {
+          return this.$message.error('失败');
+        }
+        this.$message.success('成功');
+        this.getCateList();
+        this.cateDialogVisible = false;
+      });
+    },
+    //监听表单的关闭并重置数据
+    addCateDialogClosed() {
+      this.$refs.addCateFormRef.resetFields();
+      this.cateParentValue = [];
+      this.addCateForm.cat_pid = 0;
+      this.addCateForm.cat_level = 0;
+      console.log(this.addCateForm);
     }
   }
 };
