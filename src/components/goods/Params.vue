@@ -22,11 +22,11 @@
         <template>
           <el-tabs v-model="activeName" @tab-click="tabHandleClick">
             <!-- 添加动态参数的面板 -->
-            <el-tab-pane label="动态参数" name="first">
+            <el-tab-pane label="动态参数" name="many">
               <el-button type="primary" :disabled="btnDisabled">添加参数</el-button>
             </el-tab-pane>
             <!-- 添加静态属性的面板 -->
-            <el-tab-pane label="静态属性" name="second">
+            <el-tab-pane label="静态属性" name="only">
               <el-button type="primary" :disabled="btnDisabled">添加属性</el-button>
             </el-tab-pane>
           </el-tabs>
@@ -50,7 +50,8 @@ export default {
       },
       //级联选择框选中的数组
       cateValue: '',
-      activeName: 'second'
+      //激活的tab框
+      activeName: 'many'
     };
   },
   created() {
@@ -68,24 +69,42 @@ export default {
     },
     //级联选择框选择项变化会触发这个函数
     cateSelectKeys() {
-      console.log(this.cateValue);
+      this.getParamsDate();
+    },
+    tabHandleClick() {
+      console.log(this.activeName);
+      this.getParamsDate();
+    },
+    //不管是切换tab还是cascader切换都能触发数据获取
+    async getParamsDate() {
       if (this.cateValue.length !== 3) {
         this.cateValue = [];
         return;
       }
       //证明选中的是三级分类
       console.log(this.cateValue);
-    },
-    tabHandleClick() {
+      //选中三级分类就获取数据
+      let { data: res } = await this.$http.get(`categories/${this.cateId}/attributes`, { params: { sel: this.activeName } });
       console.log(this.activeName);
+      if (res.meta.status !== 200) {
+        return this.$message.error('获取失败');
+      }
+      console.log(res.data);
     }
   },
   computed: {
+    //定义的计算属性，按钮是否显示，只有已经选了三级分类才显示
     btnDisabled: function() {
       if (this.cateValue.length !== 3) {
         return true;
       }
       return false;
+    },
+    cateId: function() {
+      if (this.cateValue.length === 3) {
+        return this.cateValue[2];
+      }
+      return null;
     }
   }
 };
