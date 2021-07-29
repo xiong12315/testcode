@@ -23,16 +23,46 @@
           <el-tabs v-model="activeName" @tab-click="tabHandleClick">
             <!-- 添加动态参数的面板 -->
             <el-tab-pane label="动态参数" name="many">
-              <el-button type="primary" :disabled="btnDisabled">添加参数</el-button>
+              <el-button type="primary" :disabled="btnDisabled" @click="showDialog">添加参数</el-button>
+              <el-table :data="manyTableData" style="width: 100%" border>
+                <el-table-column prop="attr_name" label="参数名称"> </el-table-column>
+                <el-table-column label="操作">
+                  <template>
+                    <el-button type="primary" icon="el-icon-edit">修改</el-button>
+                    <el-button type="warning" icon="el-icon-delete">删除</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
             </el-tab-pane>
             <!-- 添加静态属性的面板 -->
             <el-tab-pane label="静态属性" name="only">
-              <el-button type="primary" :disabled="btnDisabled">添加属性</el-button>
+              <el-button type="primary" :disabled="btnDisabled" @click="showDialog">添加属性</el-button>
+              <el-table :data="onlyTableData" style="width: 100%" border>
+                <el-table-column prop="attr_name" label="参数名称"> </el-table-column>
+                <el-table-column label="操作">
+                  <template>
+                    <el-button type="primary" icon="el-icon-edit">修改</el-button>
+                    <el-button type="warning" icon="el-icon-delete">删除</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
             </el-tab-pane>
           </el-tabs>
         </template>
       </el-row>
     </el-card>
+    <el-dialog :title="'添加' + this.addDialog" :visible.sync="addDialogVisible" width="50%" @close="addDialogClosed">
+      <!-- 添加参数对话框 -->
+      <el-form :model="addForm" :rules="addFormRules" ref="addDialogFormRef" label-width="150px">
+        <el-form-item :label="'添加' + addDialog" prop="attr_name">
+          <el-input v-model="addForm.attr_name"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="addDialogVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -51,7 +81,24 @@ export default {
       //级联选择框选中的数组
       cateValue: '',
       //激活的tab框
-      activeName: 'many'
+      activeName: 'many',
+      //动态参数的数据
+      manyTableData: [],
+      //静态属性的数据
+      onlyTableData: [],
+      //控制添加对话框的显示与隐藏
+      addDialogVisible: false,
+      //添加参数的表单数据对象
+      addForm: {
+        attr_name: ''
+      },
+      //添加表单的验证规则
+      addFormRules: {
+        attr_name: [
+          { required: true, message: '请输入添加名称', trigger: 'blur' },
+          { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+        ]
+      }
     };
   },
   created() {
@@ -71,6 +118,7 @@ export default {
     cateSelectKeys() {
       this.getParamsDate();
     },
+    //tab框变化会触发这个函数
     tabHandleClick() {
       console.log(this.activeName);
       this.getParamsDate();
@@ -90,6 +138,20 @@ export default {
         return this.$message.error('获取失败');
       }
       console.log(res.data);
+      if (this.activeName === 'many') {
+        this.manyTableData = res.data;
+      }
+      if (this.activeName === 'only') {
+        this.onlyTableData = res.data;
+      }
+      console.log(this.manyTableData);
+    },
+    showDialog() {
+      this.addDialogVisible = true;
+    },
+    //监听对话框的关闭事件
+    addDialogClosed() {
+      this.$refs.addDialogFormRef.resetFields();
     }
   },
   computed: {
@@ -105,6 +167,12 @@ export default {
         return this.cateValue[2];
       }
       return null;
+    },
+    addDialog: function() {
+      if (this.activeName === 'many') {
+        return '动态参数';
+      }
+      return '静态属性';
     }
   }
 };
