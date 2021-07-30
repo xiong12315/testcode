@@ -23,12 +23,12 @@
           <el-tabs v-model="activeName" @tab-click="tabHandleClick">
             <!-- 添加动态参数的面板 -->
             <el-tab-pane label="动态参数" name="many">
-              <el-button type="primary" :disabled="btnDisabled" @click="showDialog">添加参数</el-button>
+              <el-button type="primary" :disabled="btnDisabled" @click="showAddDialog">添加参数</el-button>
               <el-table :data="manyTableData" style="width: 100%" border>
                 <el-table-column prop="attr_name" label="参数名称"> </el-table-column>
                 <el-table-column label="操作">
-                  <template>
-                    <el-button type="primary" icon="el-icon-edit">修改</el-button>
+                  <template slot-scope="scope">
+                    <el-button type="primary" icon="el-icon-edit" @click="showEditDialog(scope.row.attr_id)">修改</el-button>
                     <el-button type="warning" icon="el-icon-delete">删除</el-button>
                   </template>
                 </el-table-column>
@@ -36,12 +36,12 @@
             </el-tab-pane>
             <!-- 添加静态属性的面板 -->
             <el-tab-pane label="静态属性" name="only">
-              <el-button type="primary" :disabled="btnDisabled" @click="showDialog">添加属性</el-button>
+              <el-button type="primary" :disabled="btnDisabled" @click="showAddDialog">添加属性</el-button>
               <el-table :data="onlyTableData" style="width: 100%" border>
                 <el-table-column prop="attr_name" label="参数名称"> </el-table-column>
                 <el-table-column label="操作">
-                  <template>
-                    <el-button type="primary" icon="el-icon-edit">修改</el-button>
+                  <template slot-scope="scope">
+                    <el-button type="primary" icon="el-icon-edit" @click="showEditDialog(scope.row.attr_id)">修改</el-button>
                     <el-button type="warning" icon="el-icon-delete">删除</el-button>
                   </template>
                 </el-table-column>
@@ -60,7 +60,19 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="addDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="addDialogVisible = false">确 定</el-button>
+        <el-button type="primary" @click="addCateData">确 定</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog :title="'修改' + this.editDialog" :visible.sync="editDialogVisible" width="50%" @close="editDialogClosed">
+      <!-- 修改参数对话框 -->
+      <el-form :model="editForm" :rules="editFormRules" ref="editDialogFormRef" label-width="150px">
+        <el-form-item :label="'修改' + editDialog" prop="attr_name">
+          <el-input v-model="editForm.attr_name"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="editCateData">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -88,14 +100,25 @@ export default {
       onlyTableData: [],
       //控制添加对话框的显示与隐藏
       addDialogVisible: false,
+      //控制修改对话框的显示与隐藏
+      editDialogVisible: false,
       //添加参数的表单数据对象
       addForm: {
+        attr_name: ''
+      },
+      editForm: {
         attr_name: ''
       },
       //添加表单的验证规则
       addFormRules: {
         attr_name: [
           { required: true, message: '请输入添加名称', trigger: 'blur' },
+          { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+        ]
+      },
+      editFormRules: {
+        attr_name: [
+          { required: true, message: '请输入修改名称', trigger: 'blur' },
           { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
         ]
       }
@@ -133,25 +156,68 @@ export default {
       console.log(this.cateValue);
       //选中三级分类就获取数据
       let { data: res } = await this.$http.get(`categories/${this.cateId}/attributes`, { params: { sel: this.activeName } });
-      console.log(this.activeName);
+      // console.log(this.activeName);
       if (res.meta.status !== 200) {
         return this.$message.error('获取失败');
       }
-      console.log(res.data);
+      // console.log(res.data);
       if (this.activeName === 'many') {
         this.manyTableData = res.data;
       }
       if (this.activeName === 'only') {
         this.onlyTableData = res.data;
       }
-      console.log(this.manyTableData);
+      // console.log(this.manyTableData);
     },
-    showDialog() {
+    //点击按钮展示添加对话框
+    showAddDialog() {
       this.addDialogVisible = true;
     },
-    //监听对话框的关闭事件
+    //点击按钮展示修改对话框,并加载修改数据
+    async showEditDialog(attrId) {
+      let { data: res } = await this.$http.get(`categories/${this.cateId}/attributes/${attrId}`, { params: { attr_sel: this.activeName } });
+      if (res.meta.status !== 200) {
+        return this.$message.error('错误');
+      }
+      this.editForm = res.data;
+      this.editDialogVisible = true;
+    },
+    //监听添加对话框的关闭事件
     addDialogClosed() {
       this.$refs.addDialogFormRef.resetFields();
+    },
+    //监听修改对话框的关闭事件
+    editDialogClosed() {
+      this.$refs.editDialogFormRef.resetFields();
+    },
+    //添加确定后发起数据请求
+    addCateData() {
+      this.$refs.addDialogFormRef.validate(async valid => {
+        if (!valid) return;
+        let { data: res } = await this.$http.post(`categories/${this.cateId}/attributes`, {
+          attr_name: this.addForm.attr_name,
+          attr_sel: this.activeName
+        });
+        if (res.meta.status !== 201) {
+          return this.$message.error('错误');
+        }
+        this.$message.success('成功');
+        this.getParamsDate();
+        this.addDialogVisible = false;
+      });
+    },
+    //点击按钮，修改参数信息
+    editCateData() {
+      this.$refs.editDialogFormRef.validate(async valid => {
+        if (!valid) return;
+        let { data: res } = await this.$http.put(`categories/${this.cateId}/attributes/${this.editForm.attr_id}`, { attr_name: this.editForm.attr_name, attr_sel: this.activeName });
+        if (res.meta.status !== 200) {
+          return this.$message.error('错误');
+        }
+        this.$message.success('成功');
+        this.getParamsDate();
+        this.editDialogVisible = false;
+      });
     }
   },
   computed: {
@@ -169,6 +235,12 @@ export default {
       return null;
     },
     addDialog: function() {
+      if (this.activeName === 'many') {
+        return '动态参数';
+      }
+      return '静态属性';
+    },
+    editDialog: function() {
       if (this.activeName === 'many') {
         return '动态参数';
       }
