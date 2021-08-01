@@ -25,11 +25,12 @@
             <el-tab-pane label="动态参数" name="many">
               <el-button type="primary" :disabled="btnDisabled" @click="showAddDialog">添加参数</el-button>
               <el-table :data="manyTableData" style="width: 100%" border>
+                <el-table-column type="expand"> </el-table-column>
                 <el-table-column prop="attr_name" label="参数名称"> </el-table-column>
                 <el-table-column label="操作">
                   <template slot-scope="scope">
                     <el-button type="primary" icon="el-icon-edit" @click="showEditDialog(scope.row.attr_id)">修改</el-button>
-                    <el-button type="warning" icon="el-icon-delete">删除</el-button>
+                    <el-button type="warning" icon="el-icon-delete" @click="removeParams(scope.row.attr_id)">删除</el-button>
                   </template>
                 </el-table-column>
               </el-table>
@@ -42,7 +43,7 @@
                 <el-table-column label="操作">
                   <template slot-scope="scope">
                     <el-button type="primary" icon="el-icon-edit" @click="showEditDialog(scope.row.attr_id)">修改</el-button>
-                    <el-button type="warning" icon="el-icon-delete">删除</el-button>
+                    <el-button type="warning" icon="el-icon-delete" @click="removeParams">删除</el-button>
                   </template>
                 </el-table-column>
               </el-table>
@@ -218,6 +219,26 @@ export default {
         this.getParamsDate();
         this.editDialogVisible = false;
       });
+    },
+    async removeParams(attrId) {
+      let confirmResult = await this.$confirm('此操作将永久删除, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      console.log(confirmResult);
+      if (confirmResult !== 'confirm') {
+        this.$message.info('已经取消');
+      }
+      if (confirmResult === 'confirm') {
+        let { data: res } = await this.$http.delete(`categories/${this.cateId}/attributes/${attrId}`);
+        if (res.meta.status !== 200) {
+          this.$message.error('错误');
+        }
+        this.$message.success('成功');
+        this.getParamsDate();
+        this.editDialogVisible = false;
+      }
     }
   },
   computed: {
