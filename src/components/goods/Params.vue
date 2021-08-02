@@ -25,7 +25,26 @@
             <el-tab-pane label="动态参数" name="many">
               <el-button type="primary" :disabled="btnDisabled" @click="showAddDialog">添加参数</el-button>
               <el-table :data="manyTableData" style="width: 100%" border>
-                <el-table-column type="expand"> </el-table-column>
+                <!-- 添加的展开行 -->
+                <el-table-column type="expand">
+                  <!-- 循环渲染Tag标签 -->
+                  <template slot-scope="scope">
+                    <el-tag v-for="(item, index) in scope.row.attr_vals" :key="index" closable @close="handleClose(index, scope.row)">{{ item }}</el-tag>
+                    <!-- 输入的文本框 -->
+                    <el-input
+                      class="input-new-tag"
+                      v-if="scope.row.inputVisible"
+                      v-model="scope.row.inputValue"
+                      ref="saveTagInput"
+                      size="small"
+                      @keyup.enter.native="handleInputConfirm(scope.row)"
+                      @blur="handleInputConfirm(scope.row)"
+                    >
+                    </el-input>
+                    <!-- 添加的按钮 -->
+                    <el-button v-else class="button-new-tag" size="small" @click="showInput(scope.row)">+ New Tag</el-button>
+                  </template>
+                </el-table-column>
                 <el-table-column prop="attr_name" label="参数名称"> </el-table-column>
                 <el-table-column label="操作">
                   <template slot-scope="scope">
@@ -114,15 +133,19 @@ export default {
       addFormRules: {
         attr_name: [
           { required: true, message: '请输入添加名称', trigger: 'blur' },
-          { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+          { min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur' }
         ]
       },
       editFormRules: {
         attr_name: [
           { required: true, message: '请输入修改名称', trigger: 'blur' },
-          { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+          { min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur' }
         ]
       }
+      //文本框的显示与隐藏，这2个数据应该为自己的不是全部绑定
+      // inputVisible: false,
+      //文本框输入的内容
+      // inputValue: ''
     };
   },
   created() {
@@ -161,7 +184,14 @@ export default {
       if (res.meta.status !== 200) {
         return this.$message.error('获取失败');
       }
-      // console.log(res.data);
+
+      res.data.forEach(item => {
+        item.attr_vals = item.attr_vals ? (item.attr_vals = item.attr_vals.split(',')) : [];
+        //每个单独定义个input的信息，通过scope单独控制
+        item.inputVisible = false;
+        item.inputValue = '';
+      });
+      console.log(res.data);
       if (this.activeName === 'many') {
         this.manyTableData = res.data;
       }
@@ -220,6 +250,7 @@ export default {
         this.editDialogVisible = false;
       });
     },
+    //删除参数
     async removeParams(attrId) {
       let confirmResult = await this.$confirm('此操作将永久删除, 是否继续?', '提示', {
         confirmButtonText: '确定',
@@ -239,6 +270,37 @@ export default {
         this.getParamsDate();
         this.editDialogVisible = false;
       }
+    },
+    //点击按钮展现文本框,通过scope.row传入来控制输入框的单独显示
+    showInput(row) {
+      row.inputVisible = true;
+      //让文本框自动获得焦点
+      //$nextTick方法的作用，当页面上元素被重新渲染之后，才会制定回调函数中的代码
+      this.$nextTick(_ => {
+        this.$refs.saveTagInput.$refs.input.focus();
+      });
+    },
+    //文本失去焦点，或者摁下Enter都会触发
+    async handleInputConfirm(row) {
+      //trim
+      console.log(row);
+      if (row.inputValue.trim().length === 0) {
+        row.inputValue = '';
+        row.inputVisible = false;
+        return;
+      }
+      //如果没有return就证明有内容，需要做后续的处理
+      row.attr_vals.push(row.inputValue.trim());
+      row.inputValue = '';
+      row.inputVisible = false;
+      let { data: res } = await this.$http.put(`categories/${this.cateId}/attributes/${row.attr_id}`, { attr_name: row.attr_name, attr_sel: row.attr_sel, attr_vals: row.attr_vals.join(',') });
+      if (res.meta.status !== 200) {
+        this.$message.error('错误');
+      }
+      this.$message.success('成功');
+    },
+    handleClose(index, row) {
+      row.attr_vals.splice;
     }
   },
   computed: {
@@ -249,6 +311,7 @@ export default {
       }
       return false;
     },
+    // 分类id
     cateId: function() {
       if (this.cateValue.length === 3) {
         return this.cateValue[2];
@@ -273,5 +336,11 @@ export default {
 <style lang="scss" scoped>
 .cateselect {
   margin: 20px 0;
+}
+.el-tag {
+  margin: 0 10px;
+}
+.input-new-tag {
+  width: 120px;
 }
 </style>
