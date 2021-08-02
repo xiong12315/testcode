@@ -58,6 +58,25 @@
             <el-tab-pane label="静态属性" name="only">
               <el-button type="primary" :disabled="btnDisabled" @click="showAddDialog">添加属性</el-button>
               <el-table :data="onlyTableData" style="width: 100%" border>
+                <el-table-column type="expand">
+                  <!-- 循环渲染Tag标签 -->
+                  <template slot-scope="scope">
+                    <el-tag v-for="(item, index) in scope.row.attr_vals" :key="index" closable @close="handleClose(index, scope.row)">{{ item }}</el-tag>
+                    <!-- 输入的文本框 -->
+                    <el-input
+                      class="input-new-tag"
+                      v-if="scope.row.inputVisible"
+                      v-model="scope.row.inputValue"
+                      ref="saveTagInput"
+                      size="small"
+                      @keyup.enter.native="handleInputConfirm(scope.row)"
+                      @blur="handleInputConfirm(scope.row)"
+                    >
+                    </el-input>
+                    <!-- 添加的按钮 -->
+                    <el-button v-else class="button-new-tag" size="small" @click="showInput(scope.row)">+ New Tag</el-button>
+                  </template>
+                </el-table-column>
                 <el-table-column prop="attr_name" label="参数名称"> </el-table-column>
                 <el-table-column label="操作">
                   <template slot-scope="scope">
@@ -161,7 +180,7 @@ export default {
       }
       this.cateList = res.data;
     },
-    //级联选择框选择项变化会触发这个函数
+    //级联选择框选择项变化会触发这个函数,
     cateSelectKeys() {
       this.getParamsDate();
     },
@@ -174,6 +193,7 @@ export default {
     async getParamsDate() {
       if (this.cateValue.length !== 3) {
         this.cateValue = [];
+        (this.manyTableData = []), (this.onlyTableData = []);
         return;
       }
       //证明选中的是三级分类
@@ -281,7 +301,7 @@ export default {
       });
     },
     //文本失去焦点，或者摁下Enter都会触发
-    async handleInputConfirm(row) {
+    handleInputConfirm(row) {
       //trim
       console.log(row);
       if (row.inputValue.trim().length === 0) {
@@ -293,14 +313,19 @@ export default {
       row.attr_vals.push(row.inputValue.trim());
       row.inputValue = '';
       row.inputVisible = false;
+      this.postFunc(row);
+    },
+    handleClose(index, row) {
+      row.attr_vals.splice(index, 1);
+      this.postFunc(row);
+    },
+    //将attr_vals的操作保存到数据库
+    async postFunc(row) {
       let { data: res } = await this.$http.put(`categories/${this.cateId}/attributes/${row.attr_id}`, { attr_name: row.attr_name, attr_sel: row.attr_sel, attr_vals: row.attr_vals.join(',') });
       if (res.meta.status !== 200) {
         this.$message.error('错误');
       }
       this.$message.success('成功');
-    },
-    handleClose(index, row) {
-      row.attr_vals.splice;
     }
   },
   computed: {
