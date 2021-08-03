@@ -186,14 +186,15 @@ export default {
     },
     //tab框变化会触发这个函数
     tabHandleClick() {
-      console.log(this.activeName);
+      // console.log(this.activeName);
       this.getParamsDate();
     },
     //不管是切换tab还是cascader切换都能触发数据获取
     async getParamsDate() {
       if (this.cateValue.length !== 3) {
         this.cateValue = [];
-        (this.manyTableData = []), (this.onlyTableData = []);
+        this.manyTableData = [];
+        this.onlyTableData = [];
         return;
       }
       //证明选中的是三级分类
@@ -313,14 +314,13 @@ export default {
       row.attr_vals.push(row.inputValue.trim());
       row.inputValue = '';
       row.inputVisible = false;
-      this.postFunc(row);
+      this.commitData(row);
     },
     handleClose(index, row) {
       row.attr_vals.splice(index, 1);
-      this.postFunc(row);
+      this.commitData(row);
     },
-    //将attr_vals的操作保存到数据库
-    async postFunc(row) {
+    async commitData(row) {
       let { data: res } = await this.$http.put(`categories/${this.cateId}/attributes/${row.attr_id}`, { attr_name: row.attr_name, attr_sel: row.attr_sel, attr_vals: row.attr_vals.join(',') });
       if (res.meta.status !== 200) {
         this.$message.error('错误');

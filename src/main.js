@@ -35,6 +35,18 @@ axios.interceptors.request.use(
 Vue.prototype.$http = axios; //每一个this组件都能通过$http访问到axios
 
 Vue.component('tree-table', TreeTable);
+//定义一个全局时间过滤器
+//其中padStart()一共接受两个参数，第一个参数用来指定字符串的最小长度，第二个参数是用来补全的字符串
+Vue.filter('dateformat', function(value) {
+  let dt = new Date(value); //date方法返回
+  let y = dt.getFullYear();
+  let m = (dt.getMonth() + 1 + '').padStart(2, '0');
+  let d = (dt.getDate() + '').padStart(2, '0');
+  let hh = (dt.getHours() + '').padStart(2, '0');
+  let mm = (dt.getMinutes() + '').padStart(2, '0');
+  let ss = (dt.getSeconds() + '').padStart(2, '0');
+  return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+});
 
 new Vue({
   router,
