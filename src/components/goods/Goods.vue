@@ -49,7 +49,7 @@
         :page-sizes="[1, 5, 10, 20]"
         :page-size="queryinfo.pagesize"
         layout="total, sizes, prev, pager, next, jumper"
-        :total="total"
+        :total="sizetotal"
       >
       </el-pagination>
     </el-card>
@@ -65,7 +65,7 @@ export default {
         pagesize: 5
       },
       goodslist: [],
-      total: ''
+      sizetotal: 0
     };
   },
   created() {
@@ -79,7 +79,7 @@ export default {
       }
       console.log(res);
       this.goodslist = res.data.goods;
-      this.total = res.data.total;
+      this.sizetotal = res.data.total;
     },
     handleSizeChange(newSize) {
       this.queryinfo.pagesize = newSize;
