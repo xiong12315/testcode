@@ -8,6 +8,12 @@ import './assets/css/global.css';
 //全局导入字体图标
 import './assets/fonts/iconfont.css';
 import TreeTable from 'vue-table-with-tree-grid';
+//导入富文本编辑器
+import VueQuillEditor from 'vue-quill-editor';
+//导入富文本样式
+import 'quill/dist/quill.core.css'; // import styles
+import 'quill/dist/quill.snow.css'; // for snow theme
+import 'quill/dist/quill.bubble.css'; // for bubble theme
 //全局导入axios
 import axios from 'axios';
 
@@ -33,6 +39,8 @@ axios.interceptors.request.use(
   }
 );
 Vue.prototype.$http = axios; //每一个this组件都能通过$http访问到axios
+//注册全局样式
+Vue.use(VueQuillEditor /* { default global options } */);
 
 Vue.component('tree-table', TreeTable);
 //定义一个全局时间过滤器

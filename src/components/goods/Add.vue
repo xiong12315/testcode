@@ -29,13 +29,13 @@
               <el-input v-model="addForm.goods_name"></el-input>
             </el-form-item>
             <el-form-item label="商品价格" prop="goods_price">
-              <el-input v-model="addForm.goods_name"></el-input>
+              <el-input v-model="addForm.goods_price"></el-input>
             </el-form-item>
             <el-form-item label="商品重量" prop="goods_weight">
-              <el-input v-model="addForm.goods_name"></el-input>
+              <el-input v-model="addForm.goods_weight"></el-input>
             </el-form-item>
             <el-form-item label="商品价格" prop="goods_number">
-              <el-input v-model="addForm.goods_name"></el-input>
+              <el-input v-model="addForm.goods_number"></el-input>
             </el-form-item>
             <el-form-item label="商品分类" prop="goods_cat">
               <el-cascader v-model="addForm.goods_cat" :options="cateList" :props="cateListProp" @change="cateHandleChange"></el-cascader>
@@ -62,13 +62,21 @@
               <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
             </el-upload>
           </el-tab-pane>
-          <el-tab-pane label="商品内容" name="4">商品内容</el-tab-pane>
+          <el-tab-pane label="商品内容" name="4">
+            <quill-editor v-model="addForm.goods_introduce"> </quill-editor>
+            <el-button type="primary" class="addbtn" @click="add">添加商品</el-button>
+          </el-tab-pane>
         </el-tabs>
       </el-form>
     </el-card>
+    <!-- 图片预览弹出框 -->
+    <el-dialog title="图片预览" :visible.sync="previewVisible" width="50%">
+      <img :src="previewPath" class="previewimg" />
+    </el-dialog>
   </div>
 </template>
 <script>
+import _ from 'lodash';
 export default {
   data() {
     return {
@@ -81,7 +89,9 @@ export default {
         goods_number: 0,
         //商品所属的分类数组
         goods_cat: [],
-        pics: []
+        pics: [],
+        goods_introduce: '',
+        attrs: []
       },
       //添加商品的表单验证规则
       addFormRules: {
@@ -110,12 +120,15 @@ export default {
       //图片上传的headers
       headersObj: {
         Authorization: window.sessionStorage.getItem('token')
-      }
+      },
+      previewPath: '',
+      previewVisible: false
     };
   },
   created() {
     this.getCateList();
   },
+
   methods: {
     async getCateList() {
       let { data: res } = await this.$http.get('categories');
@@ -160,15 +173,65 @@ export default {
       }
     },
     //处理图片预览效果的事件
-    handlePreview() {},
+    handlePreview(file) {
+      console.log(file);
+      this.previewPath = file.response.data.url;
+      console.log(this.previewPath);
+      this.previewVisible = true;
+    },
     //处理移除图片效果的操作
-    handleRemove() {},
+    handleRemove(file) {
+      // console.log(file);
+      //获取将要删除的图片临时路径
+      let findPath = file.response.data.tmp_path;
+      //从pics数组中，找到图片对应的索引值
+      let index = this.addForm.pics.findIndex(x => x.tmp_path === findPath);
+      //用splice方法将图片对象移除
+      this.addForm.pics.splice(index, 1);
+    },
     //上传成功的时候操作
     handleSuccess(response) {
       console.log(response);
       let picInfo = { pic: response.data.tmp_path };
       this.addForm.pics.push(picInfo);
       console.log(this.addForm.pics);
+    },
+    //按钮控制添加操作
+    add() {
+      this.$refs.addFormRef.validate(async valid => {
+        if (!valid) {
+          return this.$message.error('填写必要项');
+        }
+        //执行业务逻辑
+        //lodash cloneDeep(obj)深拷贝,使用该方法将原数组的深拷贝进行分割，并且不会影响原数组的v-model
+        let form = _.cloneDeep(this.addForm);
+        form.goods_cat = form.goods_cat.join(',');
+
+        //处理manyTabData
+        this.manyTabData.forEach(item => {
+          let newInfo = {
+            attr_id: item.attr_id,
+            attr_value: item.attr_vals.join(',')
+          };
+          this.addForm.attrs.push(newInfo);
+        });
+        //处理onlyTabData
+        this.onlyTabData.forEach(item => {
+          let newInfo = {
+            attr_id: item.attr_id,
+            attr_value: item.attr_vals
+          };
+          this.addForm.attrs.push(newInfo);
+        });
+        form.attrs = this.addForm.attrs;
+        console.log(form);
+        let { data: res } = await this.$http.post('goods', form);
+        if (res.meta.status !== 201) {
+          return this.$message.error('错误');
+        }
+        this.$message.success('成功');
+        this.$router.push('/goods');
+      });
     }
   },
   computed: {
@@ -184,5 +247,11 @@ export default {
 <style lang="scss" scoped>
 .el-checkbox {
   margin: 0 10px 0 0 !important;
+}
+.previewimg {
+  width: 100%;
+}
+.addbtn {
+  margin-top: 20px;
 }
 </style>
