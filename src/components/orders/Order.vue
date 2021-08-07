@@ -31,7 +31,7 @@
         </el-table-column>
         <el-table-column label="操作" width="200px">
           <template>
-            <el-button type="primary" icon="el-icon-edit" size="mini"></el-button>
+            <el-button type="primary" icon="el-icon-edit" size="mini" @click="editAddress"></el-button>
             <el-button type="success" icon="el-icon-location-outline" size="mini"></el-button>
           </template>
         </el-table-column>
@@ -47,6 +47,10 @@
       >
       </el-pagination>
     </el-card>
+    <el-dialog title="修改地址" :visible.sync="addressDialogVisible" width="50%">
+      <el-input v-model="input" placeholder="请输入内容"></el-input>
+      <el-input v-model="input" placeholder="请输入详细地址"></el-input>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -59,7 +63,8 @@ export default {
         pagesize: 10
       },
       orderList: [],
-      total: 0
+      total: 0,
+      addressDialogVisible: false
     };
   },
   created() {
@@ -82,6 +87,9 @@ export default {
     handleCurrentChange(newSize) {
       this.queryInfo.pagenum = newSize;
       this.getOrderList();
+    },
+    editAddress() {
+      this.addressDialogVisible = true;
     }
   }
 };
