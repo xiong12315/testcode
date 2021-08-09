@@ -1,0 +1,9 @@
+生成打包报告(通过vue-cli的命令生成报告)
+--report选项可以生成report.html以帮助分析包内容
+vue-cli-service build --report
+用nprogress来添加进度条效果
+babel-plugin-transform-remove-console插件在build环境需要删除console，就用这个插件
+第三方库启动cdn
+element_ui组件按需加载
+路由懒加载
+首页内容定制

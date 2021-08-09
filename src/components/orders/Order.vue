@@ -32,7 +32,7 @@
         <el-table-column label="操作" width="200px">
           <template>
             <el-button type="primary" icon="el-icon-edit" size="mini" @click="editAddress"></el-button>
-            <el-button type="success" icon="el-icon-location-outline" size="mini"></el-button>
+            <el-button type="success" icon="el-icon-location-outline" size="mini" @click="progressInfo"></el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -47,13 +47,23 @@
       >
       </el-pagination>
     </el-card>
-    <el-dialog title="修改地址" :visible.sync="addressDialogVisible" width="50%">
-      <el-input v-model="input" placeholder="请输入内容"></el-input>
-      <el-input v-model="input" placeholder="请输入详细地址"></el-input>
+    <el-dialog title="修改地址" :visible.sync="addressDialogVisible" width="50%" @close="addressDialogClosed">
+      <el-form ref="addressFormRef" :model="addressForm" label-width="80px" :rules="addressFormRules">
+        <el-form-item label="地址" prop="briefAddress">
+          <el-cascader v-model="addressForm.briefAddress" :options="city" @change="addressHandleChange" :props="addressProps"></el-cascader>
+        </el-form-item>
+        <el-form-item label="详细地址" prop="detailAddress">
+          <el-input v-model="addressForm.detailAddress" placeholder="请输入详细地址"></el-input>
+        </el-form-item>
+      </el-form> </el-dialog
+    >,
+    <el-dialog title="物流进度" :visible.sync="progressDialogVisible" width="50%">
+      <span>这是信息</span>
     </el-dialog>
   </div>
 </template>
 <script>
+import city from '@/components/orders/citydata.js';
 export default {
   data() {
     return {
@@ -64,7 +74,19 @@ export default {
       },
       orderList: [],
       total: 0,
-      addressDialogVisible: false
+      addressDialogVisible: false,
+      addressForm: {
+        detailAddress: '',
+        briefAddress: ''
+      },
+      city,
+      addressProps: { expandTrigger: 'hover' },
+      addressFormRules: {
+        briefAddress: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
+        detailAddress: [{ required: true, message: '请输入活动名称', trigger: 'blur' }]
+      },
+      progressDialogVisible: false,
+      progressData: []
     };
   },
   created() {
@@ -90,6 +112,20 @@ export default {
     },
     editAddress() {
       this.addressDialogVisible = true;
+    },
+    addressHandleChange() {
+      console.log();
+    },
+    addressDialogClosed() {
+      this.$refs.addressFormRef.resetFields();
+    },
+    async progressInfo() {
+      // let { data: res } = await this.$http.get(`/kuaidi/1106975712662`);
+      // if (res.meta.status !== 200) {
+      //   this.$message.error('错误');
+      // }
+      // this.progressData = res.data;
+      this.progressDialogVisible = true;
     }
   }
 };
